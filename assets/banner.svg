@@ -1,0 +1,80 @@
+<svg viewBox="0 0 1000 360" xmlns="http://www.w3.org/2000/svg" width="1000" height="360" preserveAspectRatio="xMidYMid meet">
+  <title>llm-harness, the loop and the context engineering that turn a language model into an agent</title>
+  <!--
+  NODE REGISTRY (x, y, w, h)
+  N1 Prompt  64 140 200 76
+  N2 Model  288 140 200 76
+  N3 Tools  512 140 200 76
+  N4 Answer 736 140 200 76
+  loop back  612,216 -> 184,220  (horizontal run at y=256)
+  badges row y=306 h=26, gap=12, start x=206
+  -->
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+      text { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+    </style>
+    <filter id="shadow-sm" x="-5%" y="-5%" width="115%" height="125%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000018"/>
+    </filter>
+    <marker id="arrow-step" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <polygon points="0 0, 6 3, 0 6" fill="#94A3B8"/>
+    </marker>
+    <marker id="arrow-loop" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <polygon points="0 0, 6 3, 0 6" fill="#8B5CF6"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="360" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="500" y="56" font-size="26" font-weight="700" fill="#111827" text-anchor="middle">llm-harness</text>
+  <text x="500" y="80" font-size="12" font-weight="400" fill="#6B7280" text-anchor="middle">the loop, the tools and the context engineering that turn a language model into an agent</text>
+  <line x1="450" y1="100" x2="550" y2="100" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- N1 Prompt -->
+  <rect x="64" y="140" width="200" height="76" rx="12" fill="#FFEDD5" stroke="#F97316" stroke-width="1.5" filter="url(#shadow-sm)"/>
+  <text x="164" y="174" font-size="14" font-weight="600" fill="#1E293B" text-anchor="middle">Prompt</text>
+  <text x="164" y="194" font-size="11" font-weight="400" fill="#9A3412" text-anchor="middle">what the user actually wants</text>
+
+  <!-- N2 Model -->
+  <rect x="288" y="140" width="200" height="76" rx="12" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.5" filter="url(#shadow-sm)"/>
+  <text x="388" y="174" font-size="14" font-weight="600" fill="#1E293B" text-anchor="middle">Model</text>
+  <text x="388" y="194" font-size="11" font-weight="400" fill="#1D4ED8" text-anchor="middle">one forward pass, no memory</text>
+
+  <!-- N3 Tools -->
+  <rect x="512" y="140" width="200" height="76" rx="12" fill="#F5F3FF" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow-sm)"/>
+  <text x="612" y="174" font-size="14" font-weight="600" fill="#1E293B" text-anchor="middle">Tools</text>
+  <text x="612" y="194" font-size="11" font-weight="400" fill="#6D28D9" text-anchor="middle">read, write, run, search</text>
+
+  <!-- N4 Answer -->
+  <rect x="736" y="140" width="200" height="76" rx="12" fill="#ECFDF5" stroke="#10B981" stroke-width="1.5" filter="url(#shadow-sm)"/>
+  <text x="836" y="174" font-size="14" font-weight="600" fill="#1E293B" text-anchor="middle">Answer</text>
+  <text x="836" y="194" font-size="11" font-weight="400" fill="#065F46" text-anchor="middle">only when nothing is left to do</text>
+
+  <!-- Step arrows -->
+  <line x1="266" y1="178" x2="284" y2="178" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round" marker-end="url(#arrow-step)"/>
+  <line x1="490" y1="178" x2="508" y2="178" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round" marker-end="url(#arrow-step)"/>
+  <line x1="714" y1="178" x2="732" y2="178" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round" marker-end="url(#arrow-step)"/>
+
+  <!-- Loop back -->
+  <path d="M 612,216 L 612,236 Q 612,256 592,256 L 204,256 Q 184,256 184,236 L 184,220"
+        fill="none" stroke="#8B5CF6" stroke-width="1.5" stroke-dasharray="5,3" stroke-linecap="round" marker-end="url(#arrow-loop)"/>
+  <text x="398" y="274" font-size="10.5" font-weight="500" fill="#6D28D9" text-anchor="middle">every tool result becomes the next turn, and the model reads the whole story again</text>
+
+  <!-- Badges -->
+  <rect x="206" y="306" width="98" height="26" rx="13" fill="#FEF9C3" stroke="#EAB308" stroke-width="1"/>
+  <text x="255" y="323" font-size="11" font-weight="600" fill="#975a13" text-anchor="middle">agentic loop</text>
+
+  <rect x="316" y="306" width="98" height="26" rx="13" fill="#F5F3FF" stroke="#8B5CF6" stroke-width="1"/>
+  <text x="365" y="323" font-size="11" font-weight="600" fill="#6D28D9" text-anchor="middle">tool calling</text>
+
+  <rect x="426" y="306" width="142" height="26" rx="13" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1"/>
+  <text x="497" y="323" font-size="11" font-weight="600" fill="#1D4ED8" text-anchor="middle">context engineering</text>
+
+  <rect x="580" y="306" width="80" height="26" rx="13" fill="#FDF2F8" stroke="#EC4899" stroke-width="1"/>
+  <text x="620" y="323" font-size="11" font-weight="600" fill="#9D174D" text-anchor="middle">subagents</text>
+
+  <rect x="672" y="306" width="123" height="26" rx="13" fill="#ECFEFF" stroke="#06B6D4" stroke-width="1"/>
+  <text x="733" y="323" font-size="11" font-weight="600" fill="#0E7490" text-anchor="middle">skills and hooks</text>
+</svg>

@@ -1,0 +1,249 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 900" preserveAspectRatio="xMidYMid meet" width="1280" height="900">
+  <title>Agentic harness architecture: the loop, the context window, the tools and the delegation layer</title>
+
+  <!-- NODE REGISTRY (grid of 40px)
+       name             |  x   |  y   |  w   |  h
+       GROUP-left       |  40  | 120  | 280  | 400
+       L1 SystemPrompt  |  64  | 176  | 232  |  64
+       L2 ToolSchemas   |  64  | 256  | 232  |  64
+       L3 Skills        |  64  | 336  | 232  |  64
+       L4 Memory        |  64  | 416  | 232  |  64
+       C0 UserTurn      | 440  | 120  | 360  |  56
+       C1 ContextWindow | 440  | 232  | 360  |  88
+       C2 LLM           | 440  | 376  | 360  | 120
+       C3 StopReason    | 440  | 552  | 360  |  56
+       C4 ToolExecutor  | 440  | 664  | 360  |  96
+       R1 Compaction    | 880  | 232  | 320  |  88
+       R2 Subagents     | 880  | 376  | 320  | 120
+       R3 FinalAnswer   | 880  | 552  | 320  |  56
+       R4 Hooks         | 880  | 664  | 320  |  96
+       LEGEND           |  40  | 800  | 1200 |  60
+  -->
+
+  <defs>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');</style>
+
+    <filter id="shadow-sm" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000018"/>
+    </filter>
+    <filter id="shadow-md" x="-5%" y="-5%" width="115%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#00000020"/>
+    </filter>
+
+    <marker id="arrow-slate" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#64748B"/>
+    </marker>
+    <marker id="arrow-yellow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#EAB308"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrow-violet" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#8B5CF6"/>
+    </marker>
+    <marker id="arrow-rose" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#EC4899"/>
+    </marker>
+    <marker id="arrow-emerald" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#10B981"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#EF4444"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#F97316"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1280" height="900" fill="#FFFFFF"/>
+
+  <!-- ===================== TITLE ===================== -->
+  <text x="40" y="52" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="18" font-weight="700" fill="#1E293B">Agentic harness architecture</text>
+  <text x="40" y="76" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#64748B">The model is one box. Everything around it is the harness, and that is where the behaviour comes from.</text>
+
+  <!-- ===================== LEFT GROUP: context sources ===================== -->
+  <rect x="40" y="120" width="280" height="400" rx="14" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.2" stroke-dasharray="6,4"/>
+  <text x="64" y="150" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" letter-spacing="0.5" fill="#475569">WHAT FILLS THE WINDOW</text>
+
+  <!-- L1 System prompt -->
+  <rect x="64" y="176" width="232" height="64" rx="10" fill="#FEF9C3" stroke="#EAB308" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="80" y="202" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">System prompt</text>
+  <text x="80" y="221" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">identity, rules, environment</text>
+  <rect x="224" y="188" width="56" height="20" rx="10" fill="#FFFFFF" stroke="#EAB308" stroke-width="1"/>
+  <text x="252" y="202" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#975a13">cached</text>
+
+  <!-- L2 Tool schemas -->
+  <rect x="64" y="256" width="232" height="64" rx="10" fill="#F5F3FF" stroke="#8B5CF6" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="80" y="282" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">Tool schemas</text>
+  <text x="80" y="301" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">fetched by name when needed</text>
+  <rect x="238" y="268" width="42" height="20" rx="10" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1"/>
+  <text x="259" y="282" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#6D28D9">lazy</text>
+
+  <!-- L3 Skills -->
+  <rect x="64" y="336" width="232" height="64" rx="10" fill="#ECFEFF" stroke="#06B6D4" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="80" y="362" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">Skills</text>
+  <text x="80" y="381" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">one line, body read on use</text>
+  <rect x="226" y="348" width="54" height="20" rx="10" fill="#FFFFFF" stroke="#06B6D4" stroke-width="1"/>
+  <text x="253" y="362" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#0E7490">on use</text>
+
+  <!-- L4 Memory -->
+  <rect x="64" y="416" width="232" height="64" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="80" y="442" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">Memory and files</text>
+  <text x="80" y="461" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">index loaded, bodies on demand</text>
+  <rect x="232" y="428" width="48" height="20" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="256" y="442" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569">index</text>
+
+  <!-- ===================== CENTER COLUMN: the loop ===================== -->
+  <text x="440" y="104" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" letter-spacing="0.5" fill="#475569">THE AGENTIC LOOP</text>
+
+  <!-- C0 User turn -->
+  <rect x="440" y="120" width="360" height="56" rx="10" fill="#FFEDD5" stroke="#F97316" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="456" y="145" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">User turn</text>
+  <text x="456" y="163" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#9A3412">a prompt, or the result of the previous tools</text>
+
+  <!-- C1 Context window -->
+  <rect x="440" y="232" width="360" height="88" rx="10" fill="#FEF9C3" stroke="#EAB308" stroke-width="1.8" filter="url(#shadow-md)"/>
+  <text x="456" y="262" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">Context window</text>
+  <text x="456" y="282" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">stable prefix first, then the volatile tail</text>
+  <text x="456" y="302" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#975a13">the cache boundary sits exactly between the two</text>
+
+  <!-- C2 LLM -->
+  <rect x="440" y="376" width="360" height="120" rx="10" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="456" y="410" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">LLM forward pass</text>
+  <text x="456" y="430" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">modern-transformer or API provider</text>
+  <text x="456" y="452" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#1D4ED8">one call per turn, prefix cache reused</text>
+  <text x="456" y="472" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#1D4ED8">the harness never edits what the model wrote</text>
+  <g transform="translate(742,448)">
+    <g transform="translate(10,-10)" opacity="0.45">
+      <rect width="30" height="30" rx="3" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.2"/>
+      <line x1="10" y1="0" x2="10" y2="30" stroke="#3B82F6" stroke-width="0.8"/>
+      <line x1="20" y1="0" x2="20" y2="30" stroke="#3B82F6" stroke-width="0.8"/>
+      <line x1="0" y1="10" x2="30" y2="10" stroke="#3B82F6" stroke-width="0.8"/>
+      <line x1="0" y1="20" x2="30" y2="20" stroke="#3B82F6" stroke-width="0.8"/>
+    </g>
+    <g transform="translate(5,-5)" opacity="0.7">
+      <rect width="30" height="30" rx="3" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.2"/>
+      <line x1="10" y1="0" x2="10" y2="30" stroke="#3B82F6" stroke-width="0.8"/>
+      <line x1="20" y1="0" x2="20" y2="30" stroke="#3B82F6" stroke-width="0.8"/>
+      <line x1="0" y1="10" x2="30" y2="10" stroke="#3B82F6" stroke-width="0.8"/>
+      <line x1="0" y1="20" x2="30" y2="20" stroke="#3B82F6" stroke-width="0.8"/>
+    </g>
+    <g>
+      <rect width="30" height="30" rx="3" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.4"/>
+      <line x1="10" y1="0" x2="10" y2="30" stroke="#3B82F6" stroke-width="0.8"/>
+      <line x1="20" y1="0" x2="20" y2="30" stroke="#3B82F6" stroke-width="0.8"/>
+      <line x1="0" y1="10" x2="30" y2="10" stroke="#3B82F6" stroke-width="0.8"/>
+      <line x1="0" y1="20" x2="30" y2="20" stroke="#3B82F6" stroke-width="0.8"/>
+    </g>
+  </g>
+
+  <!-- C3 stop_reason -->
+  <rect x="440" y="552" width="360" height="56" rx="10" fill="#FDF2F8" stroke="#EC4899" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="456" y="577" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">stop_reason</text>
+  <text x="456" y="595" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#9D174D">the single branch that drives the whole loop</text>
+
+  <!-- C4 Tool executor -->
+  <rect x="440" y="664" width="360" height="96" rx="10" fill="#F5F3FF" stroke="#8B5CF6" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="456" y="696" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">Tool executor</text>
+  <text x="456" y="716" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">independent calls run in parallel</text>
+  <text x="456" y="738" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6D28D9">an error is a normal result, not a crash</text>
+  <rect x="716" y="678" width="68" height="20" rx="10" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1"/>
+  <text x="750" y="692" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#6D28D9">parallel</text>
+
+  <!-- ===================== RIGHT COLUMN ===================== -->
+  <text x="880" y="104" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" letter-spacing="0.5" fill="#475569">WHAT KEEPS IT ALIVE</text>
+
+  <!-- R1 Compaction -->
+  <rect x="880" y="232" width="320" height="88" rx="10" fill="#FEE2E2" stroke="#EF4444" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="896" y="262" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">Compaction</text>
+  <text x="896" y="282" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">old turns summarised, files dropped</text>
+  <text x="896" y="302" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#991B1B">triggered by budget, never by turn count</text>
+
+  <!-- R2 Subagents -->
+  <rect x="880" y="376" width="320" height="120" rx="10" fill="#FDF2F8" stroke="#EC4899" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="896" y="410" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">Subagents</text>
+  <text x="896" y="430" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">fork, teammate, worktree</text>
+  <text x="896" y="452" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#9D174D">a fresh window that burns its own tokens</text>
+  <text x="896" y="472" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#9D174D">only the conclusion comes back</text>
+
+  <!-- R3 Final answer -->
+  <rect x="880" y="552" width="320" height="56" rx="10" fill="#ECFDF5" stroke="#10B981" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="896" y="577" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">Final answer</text>
+  <text x="896" y="595" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#065F46">streamed to the terminal, loop exits</text>
+
+  <!-- R4 Hooks -->
+  <rect x="880" y="664" width="320" height="96" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4" filter="url(#shadow-sm)"/>
+  <text x="896" y="696" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">Hooks</text>
+  <text x="896" y="716" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">deterministic code around each call</text>
+  <text x="896" y="738" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#475569">what must always happen is not a prompt</text>
+
+  <!-- ===================== ARROWS ===================== -->
+  <!-- A1 left group -> C1 -->
+  <path d="M 322,256 L 434,256" fill="none" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" marker-end="url(#arrow-slate)"/>
+
+  <!-- A2 C0 -> C1 -->
+  <path d="M 620,176 L 620,226" fill="none" stroke="#F97316" stroke-width="1.8" stroke-linecap="round" marker-end="url(#arrow-orange)"/>
+
+  <!-- A3 C1 -> C2 -->
+  <path d="M 620,320 L 620,370" fill="none" stroke="#EAB308" stroke-width="1.8" stroke-linecap="round" marker-end="url(#arrow-yellow)"/>
+
+  <!-- A4 C2 -> C3 -->
+  <path d="M 620,496 L 620,546" fill="none" stroke="#3B82F6" stroke-width="1.8" stroke-linecap="round" marker-end="url(#arrow-blue)"/>
+
+  <!-- A5 C3 -> C4 (tool_use) -->
+  <path d="M 620,608 L 620,658" fill="none" stroke="#EC4899" stroke-width="1.8" stroke-linecap="round" marker-end="url(#arrow-rose)"/>
+  <text x="632" y="638" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#9D174D">tool_use</text>
+
+  <!-- A6 C3 -> R3 (end_turn) -->
+  <path d="M 800,580 L 874,580" fill="none" stroke="#10B981" stroke-width="1.8" stroke-linecap="round" marker-end="url(#arrow-emerald)"/>
+  <text x="837" y="570" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#065F46">end_turn</text>
+
+  <!-- A7 C4 -> C1 (the loop back) -->
+  <path d="M 440,712 L 400,712 Q 380,712 380,692 L 380,320 Q 380,300 400,300 L 432,300" fill="none" stroke="#8B5CF6" stroke-width="1.8" stroke-dasharray="6,4" stroke-linecap="round" marker-end="url(#arrow-violet)"/>
+  <text x="368" y="510" text-anchor="middle" transform="rotate(-90 368 510)" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6D28D9">results appended, loop again</text>
+
+  <!-- A8 C2 -> R2 (spawn) -->
+  <path d="M 800,416 L 874,416" fill="none" stroke="#EC4899" stroke-width="1.4" stroke-dasharray="5,3" stroke-linecap="round" marker-end="url(#arrow-rose)"/>
+  <text x="837" y="408" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="500" fill="#9D174D">spawn</text>
+
+  <!-- A9 R2 -> C2 (report) -->
+  <path d="M 880,462 L 806,462" fill="none" stroke="#EC4899" stroke-width="1.4" stroke-dasharray="5,3" stroke-linecap="round" marker-end="url(#arrow-rose)"/>
+  <text x="843" y="454" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="500" fill="#9D174D">report</text>
+
+  <!-- A10 C1 -> R1 (overflow) -->
+  <path d="M 800,258 L 874,258" fill="none" stroke="#EF4444" stroke-width="1.4" stroke-dasharray="5,3" stroke-linecap="round" marker-end="url(#arrow-red)"/>
+  <text x="837" y="250" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="500" fill="#991B1B">overflow</text>
+
+  <!-- A11 R1 -> C1 (summary) -->
+  <path d="M 880,300 L 806,300" fill="none" stroke="#EF4444" stroke-width="1.4" stroke-dasharray="5,3" stroke-linecap="round" marker-end="url(#arrow-red)"/>
+  <text x="843" y="292" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="500" fill="#991B1B">summary</text>
+
+  <!-- A12 R4 -> C4 (intercept) -->
+  <path d="M 880,712 L 806,712" fill="none" stroke="#64748B" stroke-width="1.4" stroke-dasharray="5,3" stroke-linecap="round" marker-end="url(#arrow-slate)"/>
+  <text x="843" y="704" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="500" fill="#475569">intercept</text>
+
+  <!-- ===================== LEGEND ===================== -->
+  <rect x="40" y="800" width="1200" height="60" rx="14" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.2"/>
+
+  <rect x="72" y="824" width="12" height="12" rx="3" fill="#FFEDD5" stroke="#F97316" stroke-width="1.2"/>
+  <text x="92" y="834" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#475569">Input</text>
+
+  <rect x="242" y="824" width="12" height="12" rx="3" fill="#FEF9C3" stroke="#EAB308" stroke-width="1.2"/>
+  <text x="262" y="834" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#475569">Key state</text>
+
+  <rect x="412" y="824" width="12" height="12" rx="3" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.2"/>
+  <text x="432" y="834" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#475569">Model</text>
+
+  <rect x="582" y="824" width="12" height="12" rx="3" fill="#F5F3FF" stroke="#8B5CF6" stroke-width="1.2"/>
+  <text x="602" y="834" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#475569">Execution</text>
+
+  <rect x="752" y="824" width="12" height="12" rx="3" fill="#FDF2F8" stroke="#EC4899" stroke-width="1.2"/>
+  <text x="772" y="834" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#475569">Branching</text>
+
+  <rect x="922" y="824" width="12" height="12" rx="3" fill="#FEE2E2" stroke="#EF4444" stroke-width="1.2"/>
+  <text x="942" y="834" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#475569">Context pressure</text>
+
+  <rect x="1092" y="824" width="12" height="12" rx="3" fill="#ECFDF5" stroke="#10B981" stroke-width="1.2"/>
+  <text x="1112" y="834" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#475569">Output</text>
+</svg>
