@@ -20,7 +20,7 @@ A language model is **stateless**. It reads tokens, it writes a few more, and it
 
 This repository documents how that harness is built, from the public post-mortems of the **March 2026 Claude Code source leak**, the clean-room rewrites published afterwards, and a direct reading of a running harness from the inside.
 
-The target provider is my own [modern-transformer](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch), so the same loop drives a local model on a 6 GB GPU or a hosted API without changing a line of the loop.
+The target provider is my own [Modern LLM](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch), so the same loop drives a local model on a 6 GB GPU or a hosted API without changing a line of the loop.
 
 🚨 **The documentation is the deliverable right now.** The Python package in "Repository structure" is the plan, not shipped code.
 
@@ -49,11 +49,11 @@ One real loop, printed the way a harness log reads. The model never sees the rep
 ```
 turn 1   user        "why does the training loss explode around step 400"
 turn 1   model       stop_reason = tool_use
-         harness     ├─ Grep(pattern="warmup", path="src/mt")     ──┐ dispatched
+         harness     ├─ Grep(pattern="warmup", path="src/mllm")     ──┐ dispatched
          harness     └─ Read("configs/base.yaml")                 ──┘ in parallel (340 ms)
 
 turn 2   model       stop_reason = tool_use
-         harness     └─ Read("src/mt/optim.py", offset=120, limit=60)   (12 ms)
+         harness     └─ Read("src/mllm/optim.py", offset=120, limit=60)   (12 ms)
 
 turn 3   model       stop_reason = tool_use
          harness     └─ Read("outputs/logs/base_run-07/run.log", offset=380)
@@ -194,7 +194,7 @@ Those two lines are behaviour, not API reference. They sit in the cached prefix,
 
 Compaction is the one exception, and it is expensive: replacing the head of the conversation invalidates the whole cache, which is why it fires on a token budget and never continuously.
 
-> **The pause that does not need to happen.** A transformer *can* be paused and resumed, the KV cache is literally that state, and [`mt.cache`](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch/blob/main/src/mt/cache.py) implements it. A cloud GPU does not wait for your tool because VRAM is the scarce resource, not because the maths forbids it. Run the model locally and that trade-off flips, the cache can simply stay resident.
+> **The pause that does not need to happen.** A transformer *can* be paused and resumed, the KV cache is literally that state, and [`mllm.cache`](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch/blob/main/src/mllm/cache.py) implements it. A cloud GPU does not wait for your tool because VRAM is the scarce resource, not because the maths forbids it. Run the model locally and that trade-off flips, the cache can simply stay resident.
 
 ---
 
@@ -206,7 +206,7 @@ Compaction is the one exception, and it is expensive: replacing the head of the 
 ---
 name: ablation-runner
 description: >
-  Runs one modern-transformer ablation and reports the metric delta.
+  Runs one Modern LLM ablation and reports the metric delta.
   Use when asked to compare two configs.
 tools: Read, Grep, Glob, Bash
 model: sonnet
@@ -233,7 +233,7 @@ follow the log, and report only the run number and the metric delta.
 ```
 > /clear                  harness only, 0 tokens, the model is never called
 > !git status             the shell runs it, only the output enters the window
-> @src/mt/model.py        the file is attached to the next turn
+> @src/mllm/model.py        the file is attached to the next turn
 > /code-review high       SKILL.md expands into a prompt, the loop starts
 > why is the loss noisy   plain text, the loop starts
 ```
@@ -380,7 +380,7 @@ None of these need a frontier model. They need a loop that respects the window, 
 │
 ├── src/harness/              # 🚨 planned, not written yet
 │   ├── loop.py               # the fifteen lines, and nothing else
-│   ├── providers/            # base, local_mt (drives modern-transformer), anthropic
+│   ├── providers/            # base, local_mllm (drives Modern LLM), anthropic
 │   ├── context/              # window assembly, compaction, disclosure
 │   ├── tools/                # registry, parallel executor, filesystem tools
 │   ├── agents.py             # fork, teammate, worktree
@@ -414,10 +414,10 @@ source .venv/bin/activate   # Linux / macOS
 
 pip install torch pydantic pyyaml rich
 
-python -m harness --provider local_mt --checkpoint path/to/mt_weights.pt
+python -m harness --provider local_mllm --checkpoint path/to/mt_weights.pt
 ```
 
-⚠️ The `local_mt` provider needs a **CUDA-compatible GPU** to be usable interactively. On 6 GB of VRAM a small `modern-transformer` checkpoint fits, a large one does not, and the `anthropic` provider keeps the loop identical either way.
+⚠️ The `local_mllm` provider needs a **CUDA-compatible GPU** to be usable interactively. On 6 GB of VRAM a small `Modern LLM` checkpoint fits, a large one does not, and the `anthropic` provider keeps the loop identical either way.
 
 ---
 
@@ -430,8 +430,8 @@ This project is a study, so the sources matter more than usual:
 - 🦀 [claw-code](https://github.com/instructkr/claw-code) (the clean-room Python and Rust rewrite published after the leak)
 - 📄 [Building Effective AI Agents](https://www.anthropic.com/engineering/building-effective-agents) (Anthropic engineering)
 - 📄 [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) (Anthropic engineering)
-- 🧬 [modern-transformer](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch) (my own model, the provider this harness is built around)
-- 🤖 [Language Models from Scratch](https://github.com/Thibault-GAREL/Language_Models) (where the series starts, a bigram model and a 2017 Transformer)
+- 🧬 [Modern LLM](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch) (my own model, the provider this harness is built around)
+- 🤖 [Original LLM](https://github.com/Thibault-GAREL/Language_Models) (where the series starts, a bigram model and a 2017 Transformer)
 
 ⚖️ No leaked proprietary source is reproduced here. Everything above describes **architecture and design principles**, which is exactly the part that transfers to a harness of your own.
 

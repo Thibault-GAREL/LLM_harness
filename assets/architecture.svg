@@ -111,7 +111,7 @@
   <!-- C2 LLM -->
   <rect x="440" y="376" width="360" height="120" rx="10" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.4" filter="url(#shadow-sm)"/>
   <text x="456" y="410" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1E293B">LLM forward pass</text>
-  <text x="456" y="430" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">modern-transformer or API provider</text>
+  <text x="456" y="430" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6B7280">Modern LLM or API provider</text>
   <text x="456" y="452" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#1D4ED8">one call per turn, prefix cache reused</text>
   <text x="456" y="472" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#1D4ED8">the harness never edits what the model wrote</text>
   <g transform="translate(742,448)">
