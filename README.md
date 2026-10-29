@@ -2,8 +2,7 @@
 
 ![Python](https://img.shields.io/badge/python-3.12-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.5.1%2Bcu121-red.svg)
-![modern--transformer](https://img.shields.io/badge/provider-modern--transformer-8B5CF6.svg)
-![Status](https://img.shields.io/badge/status-documentation%20first-EAB308.svg)
+![Type](https://img.shields.io/badge/type-learning%20notes-8B5CF6.svg)
 
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Contributions](https://img.shields.io/badge/contributions-welcome-orange.svg)
@@ -18,11 +17,7 @@
 
 A language model is **stateless**. It reads tokens, it writes a few more, and it forgets everything. It cannot open a file, run a command, or remember what it did thirty seconds ago. Everything people call "an agent" lives in the program wrapped around that forward pass, and that program is the **harness**.
 
-This repository documents how that harness is built, from the public post-mortems of the **March 2026 Claude Code source leak**, the clean-room rewrites published afterwards, and a direct reading of a running harness from the inside.
-
-The target provider is my own [Modern LLM](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch), so the same loop drives a local model on a 6 GB GPU or a hosted API without changing a line of the loop.
-
-🚨 **The documentation is the deliverable right now.** The Python package in "Repository structure" is the plan, not shipped code.
+These are my **learning notes** on that harness, written to understand how it works rather than to ship one. Each mechanism is explained from the public post-mortems of the **March 2026 Claude Code source leak**, the clean-room rewrites published afterwards, and a direct reading of a running harness from the inside.
 
 ---
 
@@ -378,16 +373,6 @@ None of these need a frontier model. They need a loop that respects the window, 
 ├── scripts/
 │   └── md_to_pdf.py          # renders this README to PDF via headless Edge
 │
-├── src/harness/              # 🚨 planned, not written yet
-│   ├── loop.py               # the fifteen lines, and nothing else
-│   ├── providers/            # base, local_mllm (drives Modern LLM), anthropic
-│   ├── context/              # window assembly, compaction, disclosure
-│   ├── tools/                # registry, parallel executor, filesystem tools
-│   ├── agents.py             # fork, teammate, worktree
-│   └── hooks.py              # pre and post tool interception
-│
-├── skills/                   # 🚨 planned, one folder per skill
-│
 ├── LICENSE
 ├── README.md
 ```
@@ -396,7 +381,7 @@ None of these need a frontier model. They need a loop that respects the window, 
 
 ## 💻 Run it on Your PC
 
-🚨 **There is nothing to run yet.** The README is the current state, the package is the plan. Cloning still helps, the diagram reads better locally than on GitHub (the `Inter` import is blocked by GitHub's sandbox).
+**Nothing to install, these are notes.** Cloning still helps, the diagram reads better locally than on GitHub (the `Inter` import is blocked by GitHub's sandbox).
 
 ```bash
 git clone https://github.com/Thibault-GAREL/LLM_harness.git
@@ -404,20 +389,6 @@ cd LLM_harness
 
 python scripts/md_to_pdf.py     # regenerate README.pdf after any edit
 ```
-
-Once `src/harness/` exists, the intended setup is below.
-
-```bash
-python -m venv .venv # if you don't have a virtual environment
-source .venv/bin/activate   # Linux / macOS
-.venv\Scripts\activate      # Windows
-
-pip install torch pydantic pyyaml rich
-
-python -m harness --provider local_mllm --checkpoint path/to/mt_weights.pt
-```
-
-⚠️ The `local_mllm` provider needs a **CUDA-compatible GPU** to be usable interactively. On 6 GB of VRAM a small `Modern LLM` checkpoint fits, a large one does not, and the `anthropic` provider keeps the loop identical either way.
 
 ---
 
@@ -430,7 +401,7 @@ This project is a study, so the sources matter more than usual:
 - 🦀 [claw-code](https://github.com/instructkr/claw-code) (the clean-room Python and Rust rewrite published after the leak)
 - 📄 [Building Effective AI Agents](https://www.anthropic.com/engineering/building-effective-agents) (Anthropic engineering)
 - 📄 [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) (Anthropic engineering)
-- 🧬 [Modern LLM](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch) (my own model, the provider this harness is built around)
+- 🧬 [Modern LLM](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch) (my own model, where the examples above come from)
 - 🤖 [Original LLM](https://github.com/Thibault-GAREL/Language_Models) (where the series starts, a bigram model and a 2017 Transformer)
 - 🌊 [Transformer Alternatives](https://github.com/Thibault-GAREL/Transformer_alternative) (my other learning notes, what tries to replace attention once the KV cache stops fitting)
 
