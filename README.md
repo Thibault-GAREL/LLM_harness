@@ -370,8 +370,8 @@ None of these need a frontier model. They need a loop that respects the window, 
 │   ├── banner.svg
 │   └── architecture.svg      # the map, one column per mechanism
 │
-├── scripts/
-│   └── md_to_pdf.py          # renders this README to PDF via headless Edge
+├── docs/
+│   └── README.pdf            # this README, printable
 │
 ├── LICENSE
 ├── README.md
@@ -386,8 +386,6 @@ None of these need a frontier model. They need a loop that respects the window, 
 ```bash
 git clone https://github.com/Thibault-GAREL/LLM_harness.git
 cd LLM_harness
-
-python scripts/md_to_pdf.py     # regenerate README.pdf after any edit
 ```
 
 ---
