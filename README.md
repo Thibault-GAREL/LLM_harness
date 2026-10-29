@@ -432,6 +432,7 @@ This project is a study, so the sources matter more than usual:
 - 📄 [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) (Anthropic engineering)
 - 🧬 [Modern LLM](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch) (my own model, the provider this harness is built around)
 - 🤖 [Original LLM](https://github.com/Thibault-GAREL/Language_Models) (where the series starts, a bigram model and a 2017 Transformer)
+- 🌊 [Transformer Alternatives](https://github.com/Thibault-GAREL/Transformer_alternative) (my other learning notes, what tries to replace attention once the KV cache stops fitting)
 
 ⚖️ No leaked proprietary source is reproduced here. Everything above describes **architecture and design principles**, which is exactly the part that transfers to a harness of your own.
 
