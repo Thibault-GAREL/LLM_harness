@@ -21,22 +21,6 @@ These are my **learning notes** on that harness, written to understand how it wo
 
 ---
 
-## ⚙️ Features
-
-  🔁 **The loop in fifteen lines**, and why the quality is never in the loop itself
-
-  🧰 **Tool design rules**, few and wide, descriptions written as prompts, errors returned as results
-
-  🧵 **Context engineering**, the cache boundary, the append-only history, and disclosure on demand
-
-  👥 **Delegation**, subagents, skills and hooks, plus when each one is the wrong answer
-
-  ⌨️ **The full command intake**, what the harness answers alone and what actually reaches the model
-
-  🧪 **Provider-agnostic**, the loop never knows if it talks to a local transformer or an API
-
----
-
 ## Example Outputs
 
 One real loop, printed the way a harness log reads. The model never sees the repository, only what the tools bring back.
@@ -85,25 +69,7 @@ Read the last row. Without a cache you pay 77 300 tokens for a conversation that
 
 ---
 
-## ⚙️ How it works
-
-  📥 **The harness assembles a context window.** A stable prefix (identity, rules, tool schemas) then the volatile tail (the conversation).
-
-  🧠 **The model does one forward pass.** No memory of the previous turn, it re-reads the whole story every time.
-
-  🔀 **The harness reads `stop_reason`.** That one field is the entire control flow.
-
-  🧰 **Tools run**, and independent calls run at the same time.
-
-  📎 **Results are appended** as a new turn, shaped exactly like a user message.
-
-  ♻️ **The loop runs again**, until the model stops asking or a budget is hit.
-
-The whole trick is that **the model decides and the harness executes**, and neither ever does the other's job.
-
----
-
-## 🗺️ Architecture Diagram
+## 🗺️ How it works
 
 ![Architecture Diagram](assets/architecture.svg)
 
