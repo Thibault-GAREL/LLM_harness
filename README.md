@@ -401,4 +401,4 @@ This project is a study, so the sources matter more than usual:
 
 No leaked proprietary source is reproduced here. Everything above describes **architecture and design principles**, which is exactly the part that transfers to a harness of your own.
 
-Code created by me 😎, Thibault GAREL - [Github](https://github.com/Thibault-GAREL)
+Notes written by me 😎, Thibault GAREL - [Github](https://github.com/Thibault-GAREL)
