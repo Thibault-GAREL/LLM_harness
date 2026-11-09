@@ -1,7 +1,5 @@
 # 🔁 llm-harness
 
-![Python](https://img.shields.io/badge/python-3.12-blue.svg)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.5.1%2Bcu121-red.svg)
 ![Type](https://img.shields.io/badge/type-learning%20notes-8B5CF6.svg)
 
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -15,15 +13,13 @@
 
 ## 📝 Project Description
 
-A language model is **stateless**. It reads tokens, it writes a few more, and it forgets everything. It cannot open a file, run a command, or remember what it did thirty seconds ago. Everything people call "an agent" lives in the program wrapped around that forward pass, and that program is the **harness**.
+A language model is **stateless**. It reads tokens, it writes a few more, and it forgets everything. Everything people call "an agent" lives in the program wrapped around that forward pass, and that program is the **harness**.
 
-These are my **learning notes** on that harness, written to understand how it works rather than to ship one. Each mechanism is explained from the public post-mortems of the **March 2026 Claude Code source leak**, the clean-room rewrites published afterwards, and a direct reading of a running harness from the inside.
+These are my **learning notes** on it, written to understand how it works rather than to ship one. They come from the public post-mortems of the **March 2026 Claude Code source leak**, the clean-room rewrites published afterwards, and a direct reading of a running harness from the inside.
 
 ---
 
-## Example Outputs
-
-One real loop, printed the way a harness log reads. The model never sees the repository, only what the tools bring back.
+## 🔬 One real loop
 
 ```
 turn 1   user        "why does the training loss explode around step 400"
@@ -46,15 +42,12 @@ turn 5   model       stop_reason = end_turn
                       a cosine decay that restarts at the peak LR ..."
 ```
 
-**Turn 3 is the interesting one.** The model guessed a path, it did not exist, and the harness returned the error as a normal result instead of crashing. The model read it, switched to `Glob`, and recovered on its own. Nobody wrote that recovery, it falls out of the loop.
+**Turn 3 is the interesting one.** The model guessed a path that did not exist, the harness returned the error as a normal result, and the model switched to `Glob` on its own. Nobody wrote that recovery, it falls out of the loop.
 
-### 📝 Notes & Observations
+<details>
+<summary>💰 <b>Why five turns do not cost five times as much</b></summary>
 
-  🐢 **Latency comes from the model, not the tools.** Four tool calls cost 373 ms together. Five forward passes cost several seconds. That is why independent calls are dispatched at once.
-
-  🧊 **What the cache actually holds.** Not the text, the attention state: every token's key and value vectors, computed once and kept in the provider's VRAM, indexed by the exact token prefix that produced them. Each call still re-sends the whole conversation, the provider matches the longest identical prefix, reloads those vectors instead of recomputing them, and only the new tail goes through the model. **One changed byte and the match stops right there**, which is why a clock in the prefix is fatal. Entries expire on a short timer (five minutes by default, an hour on request), so it is a hot-path optimisation and never storage.
-
-  💰 **Five turns means five full API calls**, each one re-sending the whole conversation. Counting the tokens each turn puts in front of the model:
+Five turns means five full API calls, each one re-sending the whole conversation. Counting the tokens each turn puts in front of the model:
 
 | Turn | Conversation size | Billed without cache | Billed with cache |
 |---|---|---|---|
@@ -65,7 +58,25 @@ turn 5   model       stop_reason = end_turn
 | 5 | 16 700 | 16 700 | 800 |
 | **Total paid** | | **77 300** | **16 700** |
 
-Read the last row. Without a cache you pay 77 300 tokens for a conversation that only ever contained 16 700, because every turn re-bills the whole history. With a cache **the total cost of a session equals the final size of its window**, since each turn only bills what it added. Quadratic becomes linear, and that single row is why long agent sessions are affordable at all.
+Without a cache you pay 77 300 tokens for a conversation that only ever contained 16 700, because every turn re-bills the whole history. With a cache **the total cost of a session equals the final size of its window**, since each turn only bills what it added. Quadratic becomes linear, and that single row is why long agent sessions are affordable at all.
+
+</details>
+
+<details>
+<summary>🧊 <b>What the cache actually holds</b></summary>
+
+Not the text, the attention state: every token's key and value vectors, computed once and kept in the provider's VRAM, indexed by the exact token prefix that produced them. Each call still re-sends the whole conversation, the provider matches the longest identical prefix, reloads those vectors instead of recomputing them, and only the new tail goes through the model.
+
+**One changed byte and the match stops right there**, which is why a clock in the prefix is fatal. Entries expire on a short timer (five minutes by default, an hour on request), so it is a hot-path optimisation and never storage.
+
+</details>
+
+<details>
+<summary>🐢 <b>Where the latency comes from</b></summary>
+
+From the model, not the tools. Four tool calls cost 373 ms together. Five forward passes cost several seconds. That is why independent calls are dispatched at once.
+
+</details>
 
 ---
 
@@ -79,7 +90,7 @@ The centre column is the loop, small on purpose. The left column is everything c
 
 ## 1️⃣ The loop
 
-**Every harness has this, and nobody is impressed by it.**
+**Every harness has this, and nobody is impressed by it.** The quality is not here, it is in the tools the loop exposes and the window it builds.
 
 ```python
 messages = [user_turn]
@@ -95,11 +106,19 @@ while True:
     messages.append(as_user_turn(results))            # results become the next turn
 ```
 
-  🎯 **The quality difference is not here.** It is in the two objects this loop manipulates, the tools it exposes and the window it builds.
+<details>
+<summary>🩹 <b>Why a failing tool never crashes the loop</b></summary>
 
-  🩹 **A failing tool returns a normal result containing the error.** No raise, no retry policy, no abort. The harness has zero recovery logic, it just refuses to hide failure from the one component able to reason about it.
+A failing tool returns a normal result containing the error. No raise, no retry policy, no abort. The harness has zero recovery logic, it just refuses to hide failure from the one component able to reason about it.
 
-  ⚡ **Parallelism is a prompt, not a scheduler.** The harness cannot know which calls are independent, the model can, so the rule lives in the prompt and the executor dispatches whatever arrived together.
+</details>
+
+<details>
+<summary>⚡ <b>Why parallelism is a prompt, not a scheduler</b></summary>
+
+The harness cannot know which calls are independent, the model can. So the rule lives in the prompt, and the executor dispatches whatever arrived together.
+
+</details>
 
 ---
 
@@ -119,11 +138,21 @@ Bash = Tool(
 
 Those two lines are behaviour, not API reference. They sit in the cached prefix, so they are the cheapest place in the whole system to put a rule.
 
-  📦 **Few tools, wide.** One `Bash` beats twenty command wrappers, one `Edit` beats `insert_line` plus `delete_line` plus `replace_range`. Every schema costs tokens permanently.
+<details>
+<summary>📦 <b>How a good tool set is shaped</b></summary>
 
-  🚫 **Fail loudly, never guess.** `Edit` demands the exact string and refuses a non-unique match. A silent wrong guess costs ten turns, a clean error costs one.
+**Few tools, wide.** One `Bash` beats twenty command wrappers, one `Edit` beats `insert_line` plus `delete_line` plus `replace_range`. Every schema costs tokens permanently.
 
-  🔌 **MCP adds tools without touching the loop.** At startup the harness asks each declared server for its tool list and drops the schemas into the same registry. The model cannot tell an MCP tool from a native one, so adding a capability becomes a config entry instead of a code change.
+**Fail loudly, never guess.** `Edit` demands the exact string and refuses a non-unique match. A silent wrong guess costs ten turns, a clean error costs one.
+
+</details>
+
+<details>
+<summary>🔌 <b>How MCP adds tools without touching the loop</b></summary>
+
+At startup the harness asks each declared server for its tool list and drops the schemas into the same registry. The model cannot tell an MCP tool from a native one, so adding a capability becomes a config entry instead of a code change.
+
+</details>
 
 ---
 
@@ -141,11 +170,21 @@ Those two lines are behaviour, not API reference. They sit in the cached prefix,
 └─ volatile tail ─────────────────────────┘
 ```
 
-  🧊 **The history is append-only, and that is a hard constraint.** A KV cache is only valid over a prefix, so changing a token at position `k` invalidates everything after it. Rewriting an old tool result costs more than the room it frees, so the harness never goes back and edits.
+<details>
+<summary>🧊 <b>Why the history is append-only</b></summary>
 
-  ✂️ **It shapes output on the way in instead.** `Read` caps at 2 000 numbered lines and hands you `offset`, `Grep` stops at 250 matches, `WebFetch` runs the page through a small fast model so 50 000 tokens of HTML become 300 tokens of answer. Once inserted, that text is frozen forever.
+A KV cache is only valid over a prefix, so changing a token at position `k` invalidates everything after it. Rewriting an old tool result costs more than the room it frees, so the harness never goes back and edits.
 
-  📇 **Disclosure on demand, the same idea at three scales.** Keep a catalogue in the window, pay for the content only when it is used:
+It shapes output on the way in instead. `Read` caps at 2 000 numbered lines and hands you `offset`, `Grep` stops at 250 matches, `WebFetch` runs the page through a small fast model so 50 000 tokens of HTML become 300 tokens of answer. Once inserted, that text is frozen forever.
+
+Compaction is the one exception, and it is expensive: replacing the head of the conversation invalidates the whole cache, which is why it fires on a token budget and never continuously.
+
+</details>
+
+<details>
+<summary>📇 <b>Disclosure on demand, the same idea at three scales</b></summary>
+
+Keep a catalogue in the window, pay for the content only when it is used.
 
 | Level | Always loaded | Loaded on demand |
 |---|---|---|
@@ -153,9 +192,14 @@ Those two lines are behaviour, not API reference. They sit in the cached prefix,
 | **Tool schemas** | the tool name only | the full JSON schema, fetched by name |
 | **Memory** | an index, one line per fact | the fact's own file, when relevant |
 
-Compaction is the one exception, and it is expensive: replacing the head of the conversation invalidates the whole cache, which is why it fires on a token budget and never continuously.
+</details>
 
-> **The pause that does not need to happen.** A transformer *can* be paused and resumed, the KV cache is literally that state, and [`mllm.cache`](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch/blob/main/src/mllm/cache.py) implements it. A cloud GPU does not wait for your tool because VRAM is the scarce resource, not because the maths forbids it. Run the model locally and that trade-off flips, the cache can simply stay resident.
+<details>
+<summary>⏸️ <b>The pause that does not need to happen</b></summary>
+
+A transformer *can* be paused and resumed, the KV cache is literally that state, and [`mllm.cache`](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch/blob/main/src/mllm/cache.py) implements it. A cloud GPU does not wait for your tool because VRAM is the scarce resource, not because the maths forbids it. Run the model locally and that trade-off flips, the cache can simply stay resident.
+
+</details>
 
 ---
 
@@ -177,13 +221,28 @@ You run a single ablation. Read the two configs, launch the training script,
 follow the log, and report only the run number and the metric delta.
 ```
 
-  🗜️ **Delegation is compression.** Reading forty files costs 90 000 tokens inside the subagent and 400 in the parent. A task that emits as much as it consumes gains nothing, which is why `Explore` is the one that actually gets used and "write this function" is a bad subagent job.
+> **A prompt is a probabilistic request. A hook is a guarantee.** "Always run the formatter after editing" written in a prompt works most of the time. The same rule as a post-edit hook works every time and costs zero tokens.
 
-  🔒 **`tools` is a restriction, not advice.** An agent without `Edit` and `Write` **cannot** modify a file, whatever it decides. Same for the three isolation models, `fork` copies the parent window, `teammate` starts cold, `worktree` gets its own checkout.
+<details>
+<summary>🗜️ <b>Why delegation is compression</b></summary>
 
-  🎣 **Skills are routed by their description alone.** No embedding, no classifier. The harness puts every skill's one-line description in the prefix, the model reads them as ordinary text, and emits `Skill(skill="...")`. **The description is the product**, a perfect body behind a vague line never loads.
+Reading forty files costs 90 000 tokens inside the subagent and 400 in the parent. A task that emits as much as it consumes gains nothing, which is why `Explore` is the one that actually gets used and "write this function" is a bad subagent job.
 
-> **A prompt is a probabilistic request. A hook is a guarantee.** "Always run the formatter after editing" written in a prompt works most of the time. The same rule as a post-edit hook works every time and costs zero tokens. Judgement goes in the prompt, guarantees go in hooks.
+</details>
+
+<details>
+<summary>🔒 <b>What a subagent can and cannot do</b></summary>
+
+`tools` is a restriction, not advice. An agent without `Edit` and `Write` **cannot** modify a file, whatever it decides. Same for the three isolation models, `fork` copies the parent window, `teammate` starts cold, `worktree` gets its own checkout.
+
+</details>
+
+<details>
+<summary>🎣 <b>How skills are routed</b></summary>
+
+By their description alone. No embedding, no classifier. The harness puts every skill's one-line description in the prefix, the model reads them as ordinary text, and emits `Skill(skill="...")`. **The description is the product**, a perfect body behind a vague line never loads.
+
+</details>
 
 ---
 
@@ -199,9 +258,10 @@ follow the log, and report only the run number and the metric delta.
 > why is the loss noisy   plain text, the loop starts
 ```
 
-`!git status` is **not** a `Bash` tool call. The model never decided it, never saw it, and no permission prompt fires. You ran it, the harness just shows the output to both of you.
+`!git status` is **not** a `Bash` tool call. The model never decided it, never saw it, and no permission prompt fires.
 
-### How it recognises and runs them
+<details>
+<summary>🔎 <b>How the harness recognises and runs them</b></summary>
 
 | Step | What happens | Example |
 |---|---|---|
@@ -212,16 +272,16 @@ follow the log, and report only the run number and the metric delta.
 | **4b. Skill** | the markdown body becomes the prompt, arguments passed through | `/code-review high` → review instructions + `high` |
 | **5. Anything else** | appended as a normal user turn | `why is the loss noisy` |
 
-  🔗 **Commands chain**, up to six skills on one line sharing the same arguments, because expansion is textual and concatenating two prompts is trivial.
+Commands chain, up to six skills on one line sharing the same arguments, because expansion is textual and concatenating two prompts is trivial. They queue behind a running turn, since injecting into a half-built window would corrupt it. Only `/status`, `/tasks` and `/usage` jump the queue, they read state without touching the conversation.
 
-  ⏳ **They queue behind a running turn**, since injecting into a half-built window would corrupt it. Only `/status`, `/tasks` and `/usage` jump the queue, they read state without touching the conversation.
-
-  📄 **Custom commands and skills are the same thing now.** `.claude/commands/deploy.md` and `.claude/skills/deploy/SKILL.md` both produce `/deploy`.
+Custom commands and skills are the same thing now. `.claude/commands/deploy.md` and `.claude/skills/deploy/SKILL.md` both produce `/deploy`.
 
 Making the model recognise `/clear` would be slower (a full forward pass for five characters), more expensive, and probabilistic. **It is the hook rule one layer earlier.**
 
+</details>
+
 <details>
-<summary><b>📋 The full command list (v2.1.220, click to expand)</b></summary>
+<summary>📋 <b>The full command list</b> (v2.1.220)</summary>
 
 **Context and history**
 
@@ -316,43 +376,13 @@ Making the model recognise `/clear` would be slower (a full forward pass for fiv
 
 ## 🧠 Why it works, in five lines
 
-  1️⃣ **The model decides, the harness executes.** Failures stay attributable.
-
-  2️⃣ **Failure is information.** Errors go back into the window, and recovery becomes reasoning.
-
-  3️⃣ **The window is the product.** Append-only, because the cache says so.
-
-  4️⃣ **Pay only for what is used.** Catalogue in context, content on demand.
-
-  5️⃣ **Guarantees are code.** Anything that must always happen is a hook, never a sentence.
+1. **The model decides, the harness executes.** Failures stay attributable.
+2. **Failure is information.** Errors go back into the window, and recovery becomes reasoning.
+3. **The window is the product.** Append-only, because the cache says so.
+4. **Pay only for what is used.** Catalogue in context, content on demand.
+5. **Guarantees are code.** Anything that must always happen is a hook, never a sentence.
 
 None of these need a frontier model. They need a loop that respects the window, which is why this shape is worth building around a small local model too.
-
----
-
-## 📂 Repository structure
-```bash
-├── assets/
-│   ├── banner.svg
-│   └── architecture.svg      # the map, one column per mechanism
-│
-├── docs/
-│   └── README.pdf            # this README, printable
-│
-├── LICENSE
-├── README.md
-```
-
----
-
-## 💻 Run it on Your PC
-
-**Nothing to install, these are notes.** Cloning still helps, the diagram reads better locally than on GitHub (the `Inter` import is blocked by GitHub's sandbox).
-
-```bash
-git clone https://github.com/Thibault-GAREL/LLM_harness.git
-cd LLM_harness
-```
 
 ---
 
@@ -360,15 +390,15 @@ cd LLM_harness
 
 This project is a study, so the sources matter more than usual:
 
-- 📰 [The Claude Code source leak, 512 000 lines and a missing .npmignore](https://layer5.io/blog/engineering/the-claude-code-source-leak-512000-lines-a-missing-npmignore-and-the-fastest-growing-repo-in-github-history/) (Layer5, the reference post-mortem)
-- 🔍 [Diving into Claude Code's source code](https://read.engineerscodex.com/p/diving-into-claude-codes-source-code) (Engineer's Codex, the architecture breakdown)
-- 🦀 [claw-code](https://github.com/instructkr/claw-code) (the clean-room Python and Rust rewrite published after the leak)
-- 📄 [Building Effective AI Agents](https://www.anthropic.com/engineering/building-effective-agents) (Anthropic engineering)
-- 📄 [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) (Anthropic engineering)
-- 🧬 [Modern LLM](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch) (my own model, where the examples above come from)
-- 🤖 [Original LLM](https://github.com/Thibault-GAREL/Language_Models) (where the series starts, a bigram model and a 2017 Transformer)
-- 🌊 [Transformer Alternatives](https://github.com/Thibault-GAREL/Transformer_alternative) (my other learning notes, what tries to replace attention once the KV cache stops fitting)
+- [The Claude Code source leak, 512 000 lines and a missing .npmignore](https://layer5.io/blog/engineering/the-claude-code-source-leak-512000-lines-a-missing-npmignore-and-the-fastest-growing-repo-in-github-history/) (Layer5, the reference post-mortem)
+- [Diving into Claude Code's source code](https://read.engineerscodex.com/p/diving-into-claude-codes-source-code) (Engineer's Codex, the architecture breakdown)
+- [claw-code](https://github.com/instructkr/claw-code) (the clean-room Python and Rust rewrite published after the leak)
+- [Building Effective AI Agents](https://www.anthropic.com/engineering/building-effective-agents) (Anthropic engineering)
+- [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) (Anthropic engineering)
+- [Modern LLM](https://github.com/Thibault-GAREL/LLMs_modern_from_scratch) (my own model, where the examples above come from)
+- [Original LLM](https://github.com/Thibault-GAREL/Language_Models) (where the series starts, a bigram model and a 2017 Transformer)
+- [Transformer Alternatives](https://github.com/Thibault-GAREL/Transformer_alternative) (my other learning notes, what tries to replace attention once the KV cache stops fitting)
 
-⚖️ No leaked proprietary source is reproduced here. Everything above describes **architecture and design principles**, which is exactly the part that transfers to a harness of your own.
+No leaked proprietary source is reproduced here. Everything above describes **architecture and design principles**, which is exactly the part that transfers to a harness of your own.
 
 Code created by me 😎, Thibault GAREL - [Github](https://github.com/Thibault-GAREL)
