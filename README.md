@@ -390,7 +390,6 @@ None of these need a frontier model. They need a loop that respects the window, 
 <summary>📚 <b>My other learning notes</b></summary>
 
 - [transformer-alternatives](https://github.com/Thibault-GAREL/Transformer_alternative) (what tries to replace attention once the KV cache stops fitting)
-- [J-space](https://github.com/Thibault-GAREL/J-space) (the words a model thinks but never says, read with the J-lens)
 
 </details>
 
